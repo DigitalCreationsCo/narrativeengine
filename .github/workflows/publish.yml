@@ -1,9 +1,8 @@
 name: publish
 
 on:
-  release:
-    types: [published]
-  workflow_dispatch:
+  push:
+    tags: ['v*']
 
 jobs:
   publish:
@@ -13,17 +12,36 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
+
       - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
+
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
           registry-url: "https://registry.npmjs.org"
-      - run: ./scripts/publish-all.sh
-        shell: bash
+          cache: npm
+          cache-dependency-path: typescript/package-lock.json
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Run tests
+        run: ./scripts/test-all.sh
+
+      - name: Publish Python
+        run: uv run --active maturin publish --username __token__ --password "$MATURIN_PYPI_TOKEN"
+        working-directory: python
         env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
           MATURIN_PYPI_TOKEN: ${{ secrets.MATURIN_PYPI_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          VIRTUAL_ENV: ${{ github.workspace }}/.venv-python
+
+      - name: Publish TypeScript
+        run: npm publish --access public
+        working-directory: typescript
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
