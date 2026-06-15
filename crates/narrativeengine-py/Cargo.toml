@@ -12,4 +12,4 @@ crate-type = ["cdylib"]
 
 [dependencies]
 narrativeengine-core = { path = "../narrativeengine-core" }
-pyo3 = { workspace = true }
+pyo3 = { workspace = true, features = ["extension-module"] }

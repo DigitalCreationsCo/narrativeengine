@@ -13,8 +13,8 @@
     "*.node"
   ],
   "scripts": {
-    "generate": "../scripts/generate-types.sh",
-    "build:native": "napi build --cargo-cwd ../crates/narrativeengine-ts --platform --release && mv -f index.js index.cjs",
+    "generate": "node ../scripts/generate-types.mjs",
+    "build:native": "napi build --cargo-cwd ../crates/narrativeengine-ts --platform --release && node -e \"require('fs').renameSync('index.js', 'index.cjs')\"",
     "build:types": "tsc -p tsconfig.json",
     "build": "npm run generate && npm run build:native && npm run build:types",
     "lint": "eslint src tests --ext .ts",
