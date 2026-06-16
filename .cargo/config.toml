@@ -1,0 +1,9 @@
+# Allow undefined Python symbols in cdylib builds on macOS.
+# PyO3 extension modules must NOT link libpython; symbols are resolved
+# at runtime by the Python interpreter that loads the .so file.
+# Without this, the macOS linker errors on __Py_NoneStruct and similar.
+[target.aarch64-apple-darwin]
+rustflags = ["-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]
+
+[target.x86_64-apple-darwin]
+rustflags = ["-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]
