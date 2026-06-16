@@ -5,11 +5,13 @@ on:
     tags: ['v*']
 
 jobs:
-  publish:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
+  # ── Build native binaries for all platforms ─────────────────
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -20,42 +22,81 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: lts/*
+          cache: npm
+          cache-dependency-path: typescript/package-lock.json
+
+      - run: pip install maturin
+      - run: npm ci
+        working-directory: typescript
+
+      # Build napi-rs .node binary for this platform
+      - run: npx napi build --cargo-cwd ../crates/narrativeengine-ts --platform --release
+        working-directory: typescript
+
+      # Build Python wheel for this platform
+      - run: maturin build --release --manifest-path crates/narrativeengine-py/Cargo.toml
+
+      # Upload napi binary
+      - uses: actions/upload-artifact@v4
+        with:
+          name: napi-${{ runner.os }}
+          path: typescript/*.node
+
+      # Upload Python wheel
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheel-${{ runner.os }}
+          path: target/wheels/*.whl
+
+  # ── Publish everything to npm and PyPI ─────────────────────
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
           registry-url: "https://registry.npmjs.org"
           cache: npm
           cache-dependency-path: typescript/package-lock.json
 
-      # Build, test, and verify parity
-      - run: pip install maturin
-      - run: npm install
-        working-directory: typescript
-      - run: npm run build
-        working-directory: typescript
-      - run: cargo test --workspace --exclude narrativeengine-py
-
-      # Build Python wheel once — used for both testing and publish.
-      # Install from wheel instead of `maturin develop` (which needs a
-      # virtualenv not present on GitHub Actions runners).
-      - run: maturin build --release --manifest-path crates/narrativeengine-py/Cargo.toml
-      - run: pip install -e "python[dev]"
-        shell: bash
-      - run: pip install --force-reinstall --no-deps target/wheels/narrativeengine-*.whl
-        shell: bash
-      - run: pytest python
-
-      - run: npm test
-        working-directory: typescript
-      - run: ./scripts/test-parity.sh
-        shell: bash
-
-      # Publish Python wheel to PyPI (already built above)
-      # `maturin upload` is deprecated — using twine instead.
       - run: pip install twine
-      - name: Publish Python to PyPI
-        run: twine upload --skip-existing --username __token__ --password "${{ secrets.MATURIN_PYPI_TOKEN }}" "${{ github.workspace }}/target/wheels/"*.whl
+      - run: npm ci
+        working-directory: typescript
+
+      # Collect all platform .node binaries into one directory
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: napi-*
+          path: typescript/
+          merge-multiple: true
+
+      # Collect all platform wheels into one directory
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: wheel-*
+          path: target/wheels/
+          merge-multiple: true
+
+      # Build TypeScript types only (not full build — native binaries already collected)
+      - run: npm run build:types
+        working-directory: typescript
+
+      # Verify we have all expected platform binaries
+      - run: ls -la typescript/*.node
+      - run: ls -la target/wheels/
+
+      # Publish Python wheels to PyPI
+      - run: twine upload --skip-existing --username __token__ --password "${{ secrets.MATURIN_PYPI_TOKEN }}" target/wheels/*.whl
 
       # Publish TypeScript SDK to npm
-      - name: Publish TypeScript to npm
-        run: npm publish --access public
+      - run: npm publish --access public
         working-directory: typescript
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

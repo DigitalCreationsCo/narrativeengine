@@ -29,7 +29,7 @@ jobs:
       - run: pip install -e "python[dev]"
       - run: ruff check python
       - run: mypy python/narrativeengine
-      - run: npm install && npm run lint
+      - run: npm ci && npm run lint
         working-directory: typescript
 
   # ── Build + test (platform-specific — 3 OS matrix) ─────────────
@@ -51,17 +51,12 @@ jobs:
           node-version: lts/*
           cache: npm
           cache-dependency-path: typescript/package-lock.json
-      - uses: actions/cache@v4
-        with:
-          path: ~/.cache/uv
-          key: uv-${{ runner.os }}-${{ hashFiles('python/pyproject.toml') }}
-
       # Build native binaries (release mode for distributable artifacts)
       - run: pip install maturin
       - run: maturin build --manifest-path crates/narrativeengine-py/Cargo.toml --release
 
       # Build TypeScript SDK (includes native napi build)
-      - run: npm install
+      - run: npm ci
         working-directory: typescript
       - run: npm run build
         working-directory: typescript
