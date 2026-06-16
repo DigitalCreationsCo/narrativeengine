@@ -56,6 +56,8 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
@@ -84,7 +86,10 @@ jobs:
           path: target/wheels/
           merge-multiple: true
 
-      # Build TypeScript types only (not full build — native binaries already collected)
+      # Pre-publish validation: version consistency + type freshness
+      - run: node scripts/pre-publish-check.mjs
+
+      # Build TypeScript types (uses up-to-date generated models, if any)
       - run: npm run build:types
         working-directory: typescript
 
