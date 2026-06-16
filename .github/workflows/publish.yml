@@ -104,5 +104,5 @@ jobs:
       - run: twine upload --skip-existing --username __token__ --password "${{ secrets.MATURIN_PYPI_TOKEN }}" target/wheels/*.whl
 
       # Publish TypeScript SDK to npm via npm trusted publishing (OIDC)
-      - run: npm publish --provenance --access public
+      - run: unset NODE_AUTH_TOKEN NPM_TOKEN && npm publish --provenance --access public
         working-directory: typescript
