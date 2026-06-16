@@ -53,7 +53,8 @@ jobs:
           cache-dependency-path: typescript/package-lock.json
       # Build native binaries (release mode for distributable artifacts)
       - run: pip install maturin
-      - run: maturin build --manifest-path crates/narrativeengine-py/Cargo.toml --release
+      - run: maturin build --release
+        working-directory: python
 
       # Build TypeScript SDK (includes native napi build)
       - run: npm ci
@@ -70,7 +71,7 @@ jobs:
       # so maturin develop fails with "Couldn't find a virtualenv".
       - run: pip install -e "python[dev]"
         shell: bash
-      - run: pip install --force-reinstall --no-deps target/wheels/narrativeengine-*.whl
+      - run: pip install --force-reinstall --no-deps python/target/wheels/narrativeengine-*.whl
         shell: bash
       - run: pytest python
 

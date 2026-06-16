@@ -23,7 +23,7 @@ candidate = generate_candidate(lore, LabConfig(temperature=0.7, max_candidates=4
 
 ```sh
 python -m pip install -e ".[dev]"
-maturin develop --manifest-path ../crates/python-bindings/Cargo.toml --extras pydantic
+maturin develop --manifest-path ../crates/narrativeengine-py/Cargo.toml --extras pydantic
 python -m pytest
 ruff check .
 mypy narrativeengine
@@ -32,7 +32,7 @@ mypy narrativeengine
 ## Build
 
 ```sh
-maturin build --manifest-path ../crates/python-bindings/Cargo.toml --release
+maturin build --manifest-path ../crates/narrativeengine-py/Cargo.toml --release
 ```
 
 ## Release

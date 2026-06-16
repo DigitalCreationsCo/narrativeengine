@@ -1,5 +1,5 @@
 # Stub for the compiled Rust/PyO3 extension module.
-# Source: crates/python-bindings/src/lib.rs
+# Source: crates/narrativeengine-py/src/lib.rs
 
 def create_block_json(id: str, content: str) -> str: ...
 def generate_candidate_json(lore_json: str, config_json: str) -> str: ...
