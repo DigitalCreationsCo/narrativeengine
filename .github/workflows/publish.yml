@@ -48,8 +48,10 @@ jobs:
         shell: bash
 
       # Publish Python wheel to PyPI (already built above)
+      # `maturin upload` is deprecated — using twine instead.
+      - run: pip install twine
       - name: Publish Python to PyPI
-        run: maturin upload --skip-existing --username __token__ --password "${{ secrets.MATURIN_PYPI_TOKEN }}" "${{ github.workspace }}/target/wheels/*.whl"
+        run: twine upload --skip-existing --username __token__ --password "${{ secrets.MATURIN_PYPI_TOKEN }}" "${{ github.workspace }}/target/wheels/"*.whl
 
       # Publish TypeScript SDK to npm
       - name: Publish TypeScript to npm
