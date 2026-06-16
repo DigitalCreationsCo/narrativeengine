@@ -72,7 +72,8 @@ jobs:
       # so maturin develop fails with "Couldn't find a virtualenv".
       - run: pip install -e "python[dev]"
         shell: bash
-      - run: python -c "import pathlib, subprocess, sys; wheels = sorted(pathlib.Path('target/wheels').glob('narrativeengine-*.whl')); preferred = [w for w in wheels if 'manylinux' in w.name or 'musllinux' in w.name]; chosen = preferred[0] if preferred else wheels[0]; print(f'Installing wheel: {chosen}'); sys.exit(subprocess.call([sys.executable, '-m', 'pip', 'install', '--force-reinstall', '--no-deps', str(chosen)]))"
+      - run: >-
+          python -c "import pathlib, subprocess, sys; wheels = sorted(pathlib.Path('target/wheels').glob('narrativeengine-*.whl')); preferred = [w for w in wheels if 'manylinux' in w.name or 'musllinux' in w.name]; chosen = preferred[0] if preferred else wheels[0]; print(f'Installing wheel: {chosen}'); sys.exit(subprocess.call([sys.executable, '-m', 'pip', 'install', '--force-reinstall', '--no-deps', str(chosen)]))"
         shell: bash
       - run: pytest python
 
