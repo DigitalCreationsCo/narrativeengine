@@ -3,6 +3,12 @@
 #
 # Activated via:  git config core.hooksPath .githooks
 #
+# Fast checks only (runs in <5s):
+#   - Rust: cargo fmt
+#   - Python: ruff (lint only — pytest needs maturin develop, too slow)
+#   - TypeScript: eslint + vitest
+# Slower checks (cargo clippy, mypy, pytest, cargo test) run in CI.
+#
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
@@ -10,32 +16,43 @@ cd "$ROOT_DIR"
 
 # File patterns for selective checks
 CHANGED_RUST=$(git diff --cached --name-only --diff-filter=ACMR | grep -c '\.rs$' || true)
+CHANGED_PY=$(git diff --cached --name-only --diff-filter=ACMR | grep -c '\.py$' || true)
 CHANGED_TS=$(git diff --cached --name-only --diff-filter=ACMR | grep -c '\.ts$' || true)
-HAS_RUST_CHANGES=$([ "$CHANGED_RUST" -gt 0 ] && echo 1 || echo 0)
-HAS_TS_CHANGES=$([ "$CHANGED_TS" -gt 0 ] && echo 1 || echo 0)
+HAS_RUST=$([ "$CHANGED_RUST" -gt 0 ] && echo 1 || echo 0)
+HAS_PY=$([ "$CHANGED_PY" -gt 0 ] && echo 1 || echo 0)
+HAS_TS=$([ "$CHANGED_TS" -gt 0 ] && echo 1 || echo 0)
 
 echo "── Pre-commit checks ─────────────────────────"
 
 # ── 1. Rust formatting ─────────────────────────────────────────
-if [ "$HAS_RUST_CHANGES" -eq 1 ]; then
-  echo "→ cargo fmt (checking $CHANGED_RUST changed .rs files)..."
+if [ "$HAS_RUST" -eq 1 ]; then
+  echo "→ cargo fmt ($CHANGED_RUST changed .rs files)..."
   cargo fmt --all -- --check
 else
   echo "→ cargo fmt — skipped (no Rust changes)"
 fi
 
-# ── 2. TypeScript lint ──────────────────────────────────────────
-if [ "$HAS_TS_CHANGES" -eq 1 ]; then
-  echo "→ eslint (checking $CHANGED_TS changed .ts files)..."
+# ── 2. Python lint ──────────────────────────────────────────────
+if [ "$HAS_PY" -eq 1 ]; then
+  echo "→ ruff ($CHANGED_PY changed .py files)..."
+  pip install -q ruff 2>/dev/null || true
+  ruff check python
+else
+  echo "→ ruff — skipped (no Python changes)"
+fi
+
+# ── 3. TypeScript lint ──────────────────────────────────────────
+if [ "$HAS_TS" -eq 1 ]; then
+  echo "→ eslint ($CHANGED_TS changed .ts files)..."
   cd "$ROOT_DIR/typescript"
-  npx eslint src tests --ext .ts
+  npx --yes eslint src tests --ext .ts
   cd "$ROOT_DIR"
 else
   echo "→ eslint — skipped (no TypeScript changes)"
 fi
 
-# ── 3. TypeScript tests ────────────────────────────────────────
-if [ "$HAS_TS_CHANGES" -eq 1 ] || [ "$HAS_RUST_CHANGES" -eq 1 ]; then
+# ── 4. TypeScript tests ────────────────────────────────────────
+if [ "$HAS_TS" -eq 1 ] || [ "$HAS_RUST" -eq 1 ]; then
   echo "→ vitest..."
   cd "$ROOT_DIR/typescript"
   npx vitest run
