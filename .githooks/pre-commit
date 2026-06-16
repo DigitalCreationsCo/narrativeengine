@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# Pre-commit hook — runs fast checks before every commit.
+#
+# Activated via:  git config core.hooksPath .githooks
+#
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT_DIR"
+
+# File patterns for selective checks
+CHANGED_RUST=$(git diff --cached --name-only --diff-filter=ACMR | grep -c '\.rs$' || true)
+CHANGED_TS=$(git diff --cached --name-only --diff-filter=ACMR | grep -c '\.ts$' || true)
+HAS_RUST_CHANGES=$([ "$CHANGED_RUST" -gt 0 ] && echo 1 || echo 0)
+HAS_TS_CHANGES=$([ "$CHANGED_TS" -gt 0 ] && echo 1 || echo 0)
+
+echo "── Pre-commit checks ─────────────────────────"
+
+# ── 1. Rust formatting ─────────────────────────────────────────
+if [ "$HAS_RUST_CHANGES" -eq 1 ]; then
+  echo "→ cargo fmt (checking $CHANGED_RUST changed .rs files)..."
+  cargo fmt --all -- --check
+else
+  echo "→ cargo fmt — skipped (no Rust changes)"
+fi
+
+# ── 2. TypeScript lint ──────────────────────────────────────────
+if [ "$HAS_TS_CHANGES" -eq 1 ]; then
+  echo "→ eslint (checking $CHANGED_TS changed .ts files)..."
+  cd "$ROOT_DIR/typescript"
+  npx eslint src tests --ext .ts
+  cd "$ROOT_DIR"
+else
+  echo "→ eslint — skipped (no TypeScript changes)"
+fi
+
+# ── 3. TypeScript tests ────────────────────────────────────────
+if [ "$HAS_TS_CHANGES" -eq 1 ] || [ "$HAS_RUST_CHANGES" -eq 1 ]; then
+  echo "→ vitest..."
+  cd "$ROOT_DIR/typescript"
+  npx vitest run
+  cd "$ROOT_DIR"
+else
+  echo "→ vitest — skipped (no Rust or TypeScript changes)"
+fi
+
+echo "────────────────────────────────────────────────"
+echo "All pre-commit checks passed."
