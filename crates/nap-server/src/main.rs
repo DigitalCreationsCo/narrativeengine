@@ -85,7 +85,8 @@ async fn main() {
         .with_target(false)
         .init();
 
-    let base_path = std::env::var("NAP_BASE_PATH")
+    let base_path = std::env::var("NAP_DIR")
+        .or_else(|_| std::env::var("NAP_BASE_PATH"))
         .map(PathBuf::from)
         .unwrap_or_else(|_| PathBuf::from("."));
 

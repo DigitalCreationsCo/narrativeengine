@@ -49,9 +49,9 @@ fn expand_path(path: &Path) -> PathBuf {
 #[command(name = "nap", version, about, long_about = None)]
 struct Cli {
     /// Base directory for universe repositories.
-    /// Defaults to ~/.nap
-    #[arg(long, short = 'd', global = true, default_value = "~/.nap")]
-    base_dir: PathBuf,
+    /// Defaults to $NAP_DIR, or ~/.nap if unset.
+    #[arg(long, short = 'd', global = true)]
+    base_dir: Option<PathBuf>,
 
     /// Enable verbose debug logging.
     #[arg(long, short = 'v', global = true)]
@@ -375,8 +375,12 @@ fn main() -> Result<()> {
         .with_target(false)
         .init();
 
-    // Expand ~ in base_dir to full home directory path
-    let base_dir = expand_path(&cli.base_dir);
+    // Resolve base directory: -d flag > $NAP_DIR > ~/.nap
+    let base_dir = cli
+        .base_dir
+        .or_else(|| std::env::var("NAP_DIR").ok().map(PathBuf::from))
+        .unwrap_or_else(|| PathBuf::from("~/.nap"));
+    let base_dir = expand_path(&base_dir);
 
     // Ensure the base directory exists (e.g. ~/.nap/)
     std::fs::create_dir_all(&base_dir)
