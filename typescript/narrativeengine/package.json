@@ -1,6 +1,6 @@
 {
   "name": "narrativeengine",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "TypeScript SDK for NarrativeEngine, powered by Rust and NAPI-RS.",
   "license": "MIT",
   "repository": {
