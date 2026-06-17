@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 const repoRoot = resolve(import.meta.dirname!, "../../..");
 
 const expectedTargets: Record<string, string> = {
-  python: "python/narrativeengine/types.py",
+  python: "python/narrativeengine/narrativeengine/models.py",
   typescript: "typescript/narrativeengine/src/models.ts",
   go: "generated/go/models.go",
   java: "generated/java/NarrativeModels.java",
