@@ -1,4 +1,4 @@
-import { createBlock, generateCandidate, renderLoreSummary } from "../../typescript/dist/index.js";
+import { createBlock, generateCandidate, renderLoreSummary } from "../../typescript/narrativeengine/dist/index.js";
 
 const block = createBlock("intro", "A signal appears in the archive.");
 const lore = { id: "lore-1", title: "Archive Signal", blocks: [block] };
