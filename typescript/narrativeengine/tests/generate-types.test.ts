@@ -14,10 +14,10 @@ const expectedTargets: Record<string, string> = {
 };
 
 describe("generate-types.mjs targets", () => {
-  let mod: Awaited<typeof import("../../scripts/generate-types.mjs")>;
+  let mod: Awaited<typeof import("../../../scripts/generate-types.mjs")>;
 
   beforeEach(async () => {
-    mod = await import("../../scripts/generate-types.mjs");
+    mod = await import("../../../scripts/generate-types.mjs");
   });
 
   it("exports a targets array with all 7 SDK languages", () => {
@@ -63,10 +63,10 @@ describe("generate-types.mjs targets", () => {
 });
 
 describe("generate-types.mjs run()", () => {
-  let mod: Awaited<typeof import("../../scripts/generate-types.mjs")>;
+  let mod: Awaited<typeof import("../../../scripts/generate-types.mjs")>;
 
   beforeEach(async () => {
-    mod = await import("../../scripts/generate-types.mjs");
+    mod = await import("../../../scripts/generate-types.mjs");
   });
 
   afterEach(() => {
@@ -158,7 +158,7 @@ describe("generate-types.mjs module structure", () => {
   });
 
   it("exports run function for programmatic use", async () => {
-    const mod = await import("../../scripts/generate-types.mjs");
+    const mod = await import("../../../scripts/generate-types.mjs");
     expect(typeof mod.run).toBe("function");
     expect(mod.run.name).toBe("run");
   });

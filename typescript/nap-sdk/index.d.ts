@@ -7,3 +7,30 @@ export declare function parseUri(uriStr: string): string
 export declare function parseManifest(yamlStr: string): string
 export declare function resolve(uriStr: string, repoBasePath: string): string
 export declare function version(): string
+/**
+ * Ingest raw media bytes into the content-addressed storage engine.
+ *
+ * This is an async function returning a JavaScript Promise.  The storage
+ * backend is determined at runtime by the ``NAP_STORAGE_BACKEND``
+ * environment variable.
+ *
+ * ## Memory Safety (NAPI Buffer Ownership)
+ *
+ * The incoming [`Buffer`] is **copied** to an owned `Vec<u8>` **before**
+ * crossing the await boundary.  Holding a raw pointer to a V8 `ArrayBuffer`
+ * across an await point is unsafe because Node's garbage collector may
+ * invalidate or relocate the backing store.  By cloning eagerly we avoid
+ * use-after-free and data races.
+ *
+ * # Arguments
+ *
+ * * `data` — Raw bytes of the media asset (image, audio, mesh, etc.),
+ *   passed as a Node.js `Buffer`.
+ * * `format` — File extension without a leading dot (e.g. `"png"`,
+ *   `"jpg"`, `"wav"`, `"glb"`).
+ *
+ * # Returns
+ *
+ * A Promise resolving to the content-addressed hash `sha256:<hex>`.
+ */
+export declare function ingestMedia(data: Buffer, format: string): Promise<string>

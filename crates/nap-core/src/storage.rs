@@ -951,7 +951,7 @@ mod tests {
             .collect();
         let matching: Vec<_> = entries
             .iter()
-            .filter(|e| e.file_name().to_str().map_or(false, |n| n.contains(hex)))
+            .filter(|e| e.file_name().to_str().is_some_and(|n| n.contains(hex)))
             .collect();
         assert_eq!(
             matching.len(),
@@ -980,7 +980,7 @@ mod tests {
             let found = std::fs::read_dir(&assets_dir).unwrap().any(|e| {
                 e.ok()
                     .and_then(|e| e.file_name().to_str().map(|s| s.to_string()))
-                    .map_or(false, |name| name.starts_with(hex))
+                    .is_some_and(|name| name.starts_with(hex))
             });
             assert!(
                 found,
@@ -1070,10 +1070,7 @@ mod tests {
     fn test_storage_error_from_object_store() {
         let os_err = object_store::Error::Generic {
             store: "test-store",
-            source: Box::new(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                "store error",
-            )),
+            source: Box::new(std::io::Error::other("store error")),
         };
         let err = StorageError::ObjectStore(os_err);
         assert!(err.to_string().contains("object store error"));
