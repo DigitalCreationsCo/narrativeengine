@@ -23,7 +23,7 @@ use crate::query::ManifestQuery;
 use crate::repository::Repository;
 use crate::uri::NapUri;
 use crate::vcs::VcsBackend;
-use crate::vcs_git::GitBackend;
+use crate::vcs_lore::LoreBackend;
 
 /// Options for resolving a NAP URI. All are optional — omitting all
 /// resolves the current HEAD of the default branch.
@@ -95,7 +95,7 @@ impl Resolver {
     pub fn new(base_path: &Path) -> Self {
         Self {
             base_path: base_path.to_path_buf(),
-            vcs_factory: || Box::new(GitBackend::new()),
+            vcs_factory: || Box::new(LoreBackend::from_env()),
         }
     }
 
@@ -224,6 +224,7 @@ impl Resolver {
 mod tests {
     use super::*;
     use crate::types::EntityType;
+    use crate::vcs_git::GitBackend;
     use tempfile::TempDir;
 
     fn setup() -> (TempDir, Resolver) {

@@ -25,7 +25,7 @@ use nap_core::{
     resolver::{ResolveOptions, ResolveResult, Resolver},
     types::EntityType,
     uri::NapUri,
-    vcs_git::GitBackend,
+    vcs_lore::LoreBackend,
 };
 use std::io::IsTerminal;
 use std::path::{Path, PathBuf};
@@ -549,12 +549,12 @@ fn main() -> Result<()> {
 
 fn open_repo(base_dir: &Path, universe: &str) -> Result<Repository> {
     let repo_path = base_dir.join(universe);
-    Repository::open(&repo_path, Box::new(GitBackend::new()))
+    Repository::open(&repo_path, Box::new(LoreBackend::from_env()))
         .context(format!("failed to open universe '{universe}'"))
 }
 
 fn cmd_init(base_dir: &Path, universe: &str, remote: Option<&str>) -> Result<()> {
-    let repo = Repository::init(base_dir, universe, Box::new(GitBackend::new()))
+    let repo = Repository::init(base_dir, universe, Box::new(LoreBackend::from_env()))
         .context(format!("failed to initialize universe '{universe}'"))?;
     emit(format!(
         "✓ Initialized universe '{universe}' at {}/{universe}",
@@ -649,7 +649,7 @@ fn cmd_query(base_dir: &Path, uri_str: &str, path: &str, format: &str) -> Result
 
 fn cmd_commit(base_dir: &Path, universe: &str, message: &str, author: &str) -> Result<()> {
     let repo_path = base_dir.join(universe);
-    let vcs = GitBackend::new();
+    let vcs = LoreBackend::from_env();
     let hash = nap_core::vcs::VcsBackend::commit(&vcs, &repo_path, message, author)
         .context("failed to commit")?;
     emit(format!("✓ Committed: {} ({})", message, &hash[..12]));
@@ -815,7 +815,7 @@ fn cmd_pull(base_dir: &Path, url_or_name: &str) -> Result<()> {
         let tmp_path = base_dir.join(&tmp_name);
 
         emit(format!("  Cloning from {url_or_name} …"));
-        GitBackend::clone_repo(url_or_name, &tmp_path).context("failed to clone repository")?;
+        LoreBackend::clone_repo(url_or_name, &tmp_path).context("failed to clone repository")?;
 
         // Read the universe name from .nap/config.yaml
         let config_path = tmp_path.join(".nap").join("config.yaml");

@@ -529,7 +529,7 @@ def repo_read_manifest_at_ref(
         universe: Universe name.
         entity_type: Entity type string.
         entity_id: Entity ID.
-        reference: Git ref (commit hash, branch name, or tag).
+        reference: VCS ref (commit hash, branch name, or tag).
         base_path: Base directory (defaults to ``$NAP_DIR`` / ``~/.nap``).
 
     Returns:
@@ -1086,12 +1086,14 @@ def merge_merge(
 
 
 def merge_diff(
+    schema: dict[str, Any],
     base: dict[str, Any],
     candidate: dict[str, Any],
 ) -> list[dict[str, Any]]:
     """Compute the diff between two manifest values.
 
     Args:
+        schema: The schema definition (SDL document as JSON dict).
         base: The base value.
         candidate: The candidate value to compare against base.
 
@@ -1101,7 +1103,11 @@ def merge_diff(
     return cast(
         list[dict[str, Any]],
         json.loads(
-            _native.merge_diff(json.dumps(base), json.dumps(candidate))
+            _native.merge_diff(
+                json.dumps(schema),
+                json.dumps(base),
+                json.dumps(candidate),
+            )
         ),
     )
 
@@ -1138,21 +1144,21 @@ def ingest_media(data: bytes, format: str) -> str:
 
 
 # ═══════════════════════════════════════════════════════════════════════
-# VCS / Git Operations
+# VCS / Lore Operations
 # ═══════════════════════════════════════════════════════════════════════
 
 
-def git_clone(url: str, dest_path: str) -> dict[str, Any]:
-    """Clone a Git repository.
+def lore_clone(url: str, dest_path: str) -> dict[str, Any]:
+    """Clone a Lore repository.
 
     Args:
-        url: Git remote URL.
+        url: Lore remote URL.
         dest_path: Local destination path.
 
     Returns:
         Dict with ``success``, ``url``, and ``path``.
     """
-    return cast(dict[str, Any], json.loads(_native.git_clone(url, dest_path)))
+    return cast(dict[str, Any], json.loads(_native.lore_clone(url, dest_path)))
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -1241,7 +1247,7 @@ __all__ = [
     "storage_config",
     "ingest_media",
     # VCS
-    "git_clone",
+    "lore_clone",
     # Version
     "version",
 ]

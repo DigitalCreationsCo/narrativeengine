@@ -21,7 +21,7 @@ use nap_core::{
     schema,
     types::EntityType,
     uri::NapUri,
-    vcs_git::GitBackend,
+    vcs_lore::LoreBackend,
 };
 
 // ── Tokio Runtime (lazy global) ─────────────────────────────────────
@@ -56,12 +56,17 @@ fn parse_entity_type(s: &str) -> Result<EntityType, PyErr> {
 /// Helper: open a repository at base_path/universe.
 fn open_repo(base_path: &str, universe: &str) -> Result<Repository, PyErr> {
     let repo_path = Path::new(base_path).join(universe);
-    Repository::open(&repo_path, Box::new(GitBackend::new())).map_err(map_error)
+    Repository::open(&repo_path, Box::new(LoreBackend::from_env())).map_err(map_error)
 }
 
 /// Helper: init a repository at base_path/universe.
 fn init_repo(base_path: &str, universe: &str) -> Result<Repository, PyErr> {
-    Repository::init(Path::new(base_path), universe, Box::new(GitBackend::new())).map_err(map_error)
+    Repository::init(
+        Path::new(base_path),
+        universe,
+        Box::new(LoreBackend::from_env()),
+    )
+    .map_err(map_error)
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -772,12 +777,12 @@ fn ingest_media(py: Python<'_>, data: Vec<u8>, format: String) -> PyResult<Strin
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// VCS / Git Operations
+// VCS / Lore Operations
 // ═══════════════════════════════════════════════════════════════════════
 
 #[pyfunction]
-fn git_clone(url: String, dest_path: String) -> PyResult<String> {
-    GitBackend::clone_repo(&url, Path::new(&dest_path))
+fn lore_clone(url: String, dest_path: String) -> PyResult<String> {
+    LoreBackend::clone_repo(&url, Path::new(&dest_path))
         .map_err(|e| PyValueError::new_err(e.to_string()))?;
     Ok(serde_json::json!({"success": true, "url": url, "path": dest_path}).to_string())
 }
@@ -879,7 +884,7 @@ fn _native(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_function(wrap_pyfunction!(ingest_media, module)?)?;
 
     // VCS
-    module.add_function(wrap_pyfunction!(git_clone, module)?)?;
+    module.add_function(wrap_pyfunction!(lore_clone, module)?)?;
 
     // Version
     module.add_function(wrap_pyfunction!(version, module)?)?;

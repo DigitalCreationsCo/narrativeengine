@@ -76,14 +76,14 @@ interface NativeBindings {
 
   // Merge
   mergeMerge(schemaJson: string, base: string, current: string, proposed: string): string;
-  mergeDiff(base: string, candidate: string): string;
+  mergeDiff(schemaJson: string, base: string, candidate: string): string;
 
   // Storage
   storageConfig(): string;
   ingestMedia(data: Buffer, format: string): Promise<string>;
 
   // VCS
-  gitClone(url: string, destPath: string): string;
+  loreClone(url: string, destPath: string): string;
 
   // Version
   version(): string;

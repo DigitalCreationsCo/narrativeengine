@@ -12,7 +12,7 @@ use nap_core::{
     schema,
     types::EntityType,
     uri::NapUri,
-    vcs_git::GitBackend,
+    vcs_lore::LoreBackend,
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────
@@ -28,7 +28,7 @@ fn parse_et(s: &str) -> Result<EntityType, Error> {
 
 fn open_repo(base_path: &str, universe: &str) -> Result<Repository, Error> {
     let repo_path = Path::new(base_path).join(universe);
-    Repository::open(&repo_path, Box::new(GitBackend::new())).map_err(map_error)
+    Repository::open(&repo_path, Box::new(LoreBackend::from_env())).map_err(map_error)
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -304,7 +304,7 @@ pub fn repo_init(base_path: String, universe: String) -> napi::Result<String> {
     let repo = Repository::init(
         Path::new(&base_path),
         &universe,
-        Box::new(GitBackend::new()),
+        Box::new(LoreBackend::from_env()),
     )
     .map_err(map_error)?;
     let result = serde_json::json!({
@@ -773,12 +773,12 @@ pub async fn ingest_media(data: Buffer, format: String) -> napi::Result<String> 
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// VCS / Git Operations
+// VCS / Lore Operations
 // ═══════════════════════════════════════════════════════════════════════
 
-#[napi(js_name = "gitClone")]
-pub fn git_clone(url: String, dest_path: String) -> napi::Result<String> {
-    GitBackend::clone_repo(&url, Path::new(&dest_path))
+#[napi(js_name = "loreClone")]
+pub fn lore_clone(url: String, dest_path: String) -> napi::Result<String> {
+    LoreBackend::clone_repo(&url, Path::new(&dest_path))
         .map_err(|e| Error::from_reason(e.to_string()))?;
     Ok(serde_json::json!({"success": true, "url": url, "path": dest_path}).to_string())
 }

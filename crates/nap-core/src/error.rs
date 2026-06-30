@@ -83,6 +83,10 @@ pub enum NapError {
     #[error("merge validation error: {reason}")]
     MergeValidationError { reason: String },
 
+    // ── Permission ──────────────────────────────────────────────────────
+    #[error("permission denied: {0}")]
+    PermissionDenied(String),
+
     // ── Catch-all ───────────────────────────────────────────────────────
     #[error("{0}")]
     Other(String),

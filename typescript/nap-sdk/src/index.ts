@@ -569,7 +569,7 @@ export function repoReadManifest(
  * @param universe - Universe name
  * @param entityType - Entity type string
  * @param entityId - Entity ID
- * @param reference - Git ref (commit hash, branch name, or tag)
+ * @param reference - VCS ref (commit hash, branch name, or tag)
  * @param basePath - Base directory (defaults to `$NAP_DIR` / `~/.nap`)
  * @returns Manifest object
  */
@@ -1031,16 +1031,22 @@ export function mergeMerge(
 /**
  * Compute the diff between two manifest values.
  *
+ * @param schema - The schema definition (SDL document as JSON)
  * @param base - The base value
  * @param candidate - The candidate value to compare against base
  * @returns Array of change entries describing the differences
  */
 export function mergeDiff(
+  schema: Record<string, unknown>,
   base: Record<string, unknown>,
   candidate: Record<string, unknown>,
 ): DiffEntry[] {
   return JSON.parse(
-    native.mergeDiff(JSON.stringify(base), JSON.stringify(candidate)),
+    native.mergeDiff(
+      JSON.stringify(schema),
+      JSON.stringify(base),
+      JSON.stringify(candidate),
+    ),
   ) as DiffEntry[];
 }
 
@@ -1072,18 +1078,18 @@ export async function ingestMedia(data: Buffer, format: string): Promise<string>
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// VCS / Git Operations
+// VCS / Lore Operations
 // ═══════════════════════════════════════════════════════════════════════
 
 /**
- * Clone a Git repository.
+ * Clone a Lore repository.
  *
- * @param url - Git remote URL
+ * @param url - Lore remote URL
  * @param destPath - Local destination path
  * @returns Success response
  */
-export function gitClone(url: string, destPath: string): SuccessResponse {
-  return JSON.parse(native.gitClone(url, destPath)) as SuccessResponse;
+export function loreClone(url: string, destPath: string): SuccessResponse {
+  return JSON.parse(native.loreClone(url, destPath)) as SuccessResponse;
 }
 
 // ═══════════════════════════════════════════════════════════════════════

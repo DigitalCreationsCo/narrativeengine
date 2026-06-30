@@ -56,7 +56,7 @@ use nap_core::{
     resolver::{ResolveOptions, ResolveResult, Resolver},
     schema,
     types::EntityType,
-    vcs_git::GitBackend,
+    vcs_lore::LoreBackend,
 };
 
 /// Application state shared across handlers.
@@ -249,24 +249,27 @@ async fn handle_init(
     State(state): State<Arc<AppState>>,
     Path(universe): Path<String>,
 ) -> Result<Json<serde_json::Value>, (StatusCode, Json<ApiError>)> {
-    let repo = Repository::init(&state.base_path, &universe, Box::new(GitBackend::new())).map_err(
-        |e| {
-            let (status, code) = match &e {
-                nap_core::NapError::RepositoryAlreadyExists(_) => {
-                    (StatusCode::CONFLICT, "ALREADY_EXISTS")
-                }
-                _ => (StatusCode::INTERNAL_SERVER_ERROR, "INIT_FAILED"),
-            };
-            error!(error = %e, universe = %universe, "init failed");
-            (
-                status,
-                Json(ApiError {
-                    error: e.to_string(),
-                    code: code.to_string(),
-                }),
-            )
-        },
-    )?;
+    let repo = Repository::init(
+        &state.base_path,
+        &universe,
+        Box::new(LoreBackend::from_env()),
+    )
+    .map_err(|e| {
+        let (status, code) = match &e {
+            nap_core::NapError::RepositoryAlreadyExists(_) => {
+                (StatusCode::CONFLICT, "ALREADY_EXISTS")
+            }
+            _ => (StatusCode::INTERNAL_SERVER_ERROR, "INIT_FAILED"),
+        };
+        error!(error = %e, universe = %universe, "init failed");
+        (
+            status,
+            Json(ApiError {
+                error: e.to_string(),
+                code: code.to_string(),
+            }),
+        )
+    })?;
 
     Ok(Json(serde_json::json!({
         "success": true,
@@ -292,7 +295,7 @@ async fn handle_create(
     })?;
 
     let repo_path = state.base_path.join(&universe);
-    let repo = Repository::open(&repo_path, Box::new(GitBackend::new())).map_err(|e| {
+    let repo = Repository::open(&repo_path, Box::new(LoreBackend::from_env())).map_err(|e| {
         (
             StatusCode::NOT_FOUND,
             Json(ApiError {
@@ -340,7 +343,7 @@ async fn handle_delete(
     })?;
 
     let repo_path = state.base_path.join(&universe);
-    let repo = Repository::open(&repo_path, Box::new(GitBackend::new())).map_err(|e| {
+    let repo = Repository::open(&repo_path, Box::new(LoreBackend::from_env())).map_err(|e| {
         (
             StatusCode::NOT_FOUND,
             Json(ApiError {
@@ -376,7 +379,7 @@ async fn handle_switch_branch(
     Json(body): Json<SwitchRequest>,
 ) -> Result<Json<serde_json::Value>, (StatusCode, Json<ApiError>)> {
     let repo_path = state.base_path.join(&universe);
-    let repo = Repository::open(&repo_path, Box::new(GitBackend::new())).map_err(|e| {
+    let repo = Repository::open(&repo_path, Box::new(LoreBackend::from_env())).map_err(|e| {
         (
             StatusCode::NOT_FOUND,
             Json(ApiError {
@@ -409,7 +412,7 @@ async fn handle_head_hash(
     Path(universe): Path<String>,
 ) -> Result<Json<serde_json::Value>, (StatusCode, Json<ApiError>)> {
     let repo_path = state.base_path.join(&universe);
-    let repo = Repository::open(&repo_path, Box::new(GitBackend::new())).map_err(|e| {
+    let repo = Repository::open(&repo_path, Box::new(LoreBackend::from_env())).map_err(|e| {
         (
             StatusCode::NOT_FOUND,
             Json(ApiError {
@@ -442,7 +445,7 @@ async fn handle_list_branches(
     Path(universe): Path<String>,
 ) -> Result<Json<serde_json::Value>, (StatusCode, Json<ApiError>)> {
     let repo_path = state.base_path.join(&universe);
-    let repo = Repository::open(&repo_path, Box::new(GitBackend::new())).map_err(|e| {
+    let repo = Repository::open(&repo_path, Box::new(LoreBackend::from_env())).map_err(|e| {
         (
             StatusCode::NOT_FOUND,
             Json(ApiError {
@@ -476,7 +479,7 @@ async fn handle_create_branch(
     Json(body): Json<BranchTagRequest>,
 ) -> Result<Json<serde_json::Value>, (StatusCode, Json<ApiError>)> {
     let repo_path = state.base_path.join(&universe);
-    let repo = Repository::open(&repo_path, Box::new(GitBackend::new())).map_err(|e| {
+    let repo = Repository::open(&repo_path, Box::new(LoreBackend::from_env())).map_err(|e| {
         (
             StatusCode::NOT_FOUND,
             Json(ApiError {
@@ -511,7 +514,7 @@ async fn handle_list_tags(
     // To avoid conflicting with POST /tags/:universe body parsing,
     // we use a function-level approach
     let repo_path = state.base_path.join(&universe);
-    let repo = match Repository::open(&repo_path, Box::new(GitBackend::new())) {
+    let repo = match Repository::open(&repo_path, Box::new(LoreBackend::from_env())) {
         Ok(r) => r,
         Err(e) => {
             return Err((
@@ -551,7 +554,7 @@ async fn handle_create_tag(
     Json(body): Json<BranchTagRequest>,
 ) -> Result<Json<serde_json::Value>, (StatusCode, Json<ApiError>)> {
     let repo_path = state.base_path.join(&universe);
-    let repo = Repository::open(&repo_path, Box::new(GitBackend::new())).map_err(|e| {
+    let repo = Repository::open(&repo_path, Box::new(LoreBackend::from_env())).map_err(|e| {
         (
             StatusCode::NOT_FOUND,
             Json(ApiError {
@@ -584,7 +587,7 @@ async fn handle_list_remotes(
     Path(universe): Path<String>,
 ) -> Result<Json<serde_json::Value>, (StatusCode, Json<ApiError>)> {
     let repo_path = state.base_path.join(&universe);
-    let repo = Repository::open(&repo_path, Box::new(GitBackend::new())).map_err(|e| {
+    let repo = Repository::open(&repo_path, Box::new(LoreBackend::from_env())).map_err(|e| {
         (
             StatusCode::NOT_FOUND,
             Json(ApiError {
@@ -623,7 +626,7 @@ async fn handle_add_remote(
     Json(body): Json<RemoteAddRequest>,
 ) -> Result<Json<serde_json::Value>, (StatusCode, Json<ApiError>)> {
     let repo_path = state.base_path.join(&universe);
-    let repo = Repository::open(&repo_path, Box::new(GitBackend::new())).map_err(|e| {
+    let repo = Repository::open(&repo_path, Box::new(LoreBackend::from_env())).map_err(|e| {
         (
             StatusCode::NOT_FOUND,
             Json(ApiError {
@@ -657,7 +660,7 @@ async fn handle_remove_remote(
     Path((universe, name)): Path<(String, String)>,
 ) -> Result<Json<serde_json::Value>, (StatusCode, Json<ApiError>)> {
     let repo_path = state.base_path.join(&universe);
-    let repo = Repository::open(&repo_path, Box::new(GitBackend::new())).map_err(|e| {
+    let repo = Repository::open(&repo_path, Box::new(LoreBackend::from_env())).map_err(|e| {
         (
             StatusCode::NOT_FOUND,
             Json(ApiError {
@@ -691,7 +694,7 @@ async fn handle_pull(
     Json(body): Json<PushPullRequest>,
 ) -> Result<Json<serde_json::Value>, (StatusCode, Json<ApiError>)> {
     let repo_path = state.base_path.join(&universe);
-    let repo = Repository::open(&repo_path, Box::new(GitBackend::new())).map_err(|e| {
+    let repo = Repository::open(&repo_path, Box::new(LoreBackend::from_env())).map_err(|e| {
         (
             StatusCode::NOT_FOUND,
             Json(ApiError {
@@ -726,7 +729,7 @@ async fn handle_push(
     Json(body): Json<PushPullRequest>,
 ) -> Result<Json<serde_json::Value>, (StatusCode, Json<ApiError>)> {
     let repo_path = state.base_path.join(&universe);
-    let repo = Repository::open(&repo_path, Box::new(GitBackend::new())).map_err(|e| {
+    let repo = Repository::open(&repo_path, Box::new(LoreBackend::from_env())).map_err(|e| {
         (
             StatusCode::NOT_FOUND,
             Json(ApiError {
@@ -795,7 +798,7 @@ async fn handle_validate(
     })?;
 
     let repo_path = state.base_path.join(&universe);
-    let repo = Repository::open(&repo_path, Box::new(GitBackend::new())).map_err(|e| {
+    let repo = Repository::open(&repo_path, Box::new(LoreBackend::from_env())).map_err(|e| {
         (
             StatusCode::NOT_FOUND,
             Json(ApiError {
@@ -903,7 +906,7 @@ async fn handle_commit(
     })?;
 
     let repo_path = state.base_path.join(&universe);
-    let repo = Repository::open(&repo_path, Box::new(GitBackend::new())).map_err(|e| {
+    let repo = Repository::open(&repo_path, Box::new(LoreBackend::from_env())).map_err(|e| {
         (
             StatusCode::NOT_FOUND,
             Json(ApiError {
@@ -967,7 +970,7 @@ async fn handle_revert(
     Json(body): Json<RevertRequest>,
 ) -> Result<Json<serde_json::Value>, (StatusCode, Json<ApiError>)> {
     let repo_path = state.base_path.join(&universe);
-    let repo = Repository::open(&repo_path, Box::new(GitBackend::new())).map_err(|e| {
+    let repo = Repository::open(&repo_path, Box::new(LoreBackend::from_env())).map_err(|e| {
         (
             StatusCode::NOT_FOUND,
             Json(ApiError {
@@ -1004,7 +1007,7 @@ async fn handle_sync(
     Path(universe): Path<String>,
 ) -> Result<Json<serde_json::Value>, (StatusCode, Json<ApiError>)> {
     let repo_path = state.base_path.join(&universe);
-    let repo = Repository::open(&repo_path, Box::new(GitBackend::new())).map_err(|e| {
+    let repo = Repository::open(&repo_path, Box::new(LoreBackend::from_env())).map_err(|e| {
         (
             StatusCode::NOT_FOUND,
             Json(ApiError {
@@ -1054,7 +1057,7 @@ async fn handle_history(
     })?;
 
     let repo_path = state.base_path.join(&universe);
-    let repo = Repository::open(&repo_path, Box::new(GitBackend::new())).map_err(|e| {
+    let repo = Repository::open(&repo_path, Box::new(LoreBackend::from_env())).map_err(|e| {
         (
             StatusCode::NOT_FOUND,
             Json(ApiError {
@@ -1101,7 +1104,7 @@ async fn handle_list_entities(
     Query(params): Query<std::collections::HashMap<String, String>>,
 ) -> Result<Json<serde_json::Value>, (StatusCode, Json<ApiError>)> {
     let repo_path = state.base_path.join(&universe);
-    let repo = Repository::open(&repo_path, Box::new(GitBackend::new())).map_err(|e| {
+    let repo = Repository::open(&repo_path, Box::new(LoreBackend::from_env())).map_err(|e| {
         (
             StatusCode::NOT_FOUND,
             Json(ApiError {

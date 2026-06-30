@@ -30,12 +30,6 @@ sha2 = "0.10"
 ed25519-dalek = { version = "2", features = ["serde", "rand_core"] }
 hex = "0.4"
 
-# Git backend (pure Rust)
-gix = { version = "0.72", default-features = false, features = [
-    "max-performance-safe",
-    "blocking-network-client",
-] }
-
 # CLI
 clap = { version = "4", features = ["derive"] }
 

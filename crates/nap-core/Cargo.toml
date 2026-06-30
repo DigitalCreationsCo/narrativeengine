@@ -13,7 +13,6 @@ serde_yaml = { workspace = true }
 sha2 = { workspace = true }
 ed25519-dalek = { workspace = true }
 hex = { workspace = true }
-gix = { workspace = true }
 chrono = { workspace = true }
 ulid = { workspace = true }
 thiserror = { workspace = true }
@@ -22,6 +21,7 @@ tracing = { workspace = true }
 jsonschema = { workspace = true }
 similar = { workspace = true }
 rand = { workspace = true }
+toml = "0.8"
 
 # Storage engine (local + S3 backends)
 object_store = { version = "0.11", features = ["aws"] }
@@ -30,3 +30,4 @@ bytes = "1"
 [dev-dependencies]
 tempfile = { workspace = true }
 tokio = { workspace = true }
+temp-env = "0.3"
