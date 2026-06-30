@@ -1,6 +1,6 @@
 {
   "name": "nap-sdk",
-  "version": "0.2.6",
+  "version": "0.3.0",
   "description": "TypeScript SDK for NAP (Narrative Addressing Protocol), powered by Rust and NAPI-RS.",
   "license": "MIT",
   "repository": {
