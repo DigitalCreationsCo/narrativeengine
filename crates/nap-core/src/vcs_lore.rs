@@ -174,7 +174,7 @@ impl LoreBackend {
     /// to clone and don't need a full backend.
     pub fn clone_repo(url: &str, dest: &Path) -> Result<(), NapError> {
         LoreProcessRunner::run(
-            &[
+            [
                 "clone",
                 url,
                 dest.to_str().unwrap_or("."),
@@ -226,7 +226,7 @@ impl VcsBackend for LoreBackend {
 
         // Step 1: Create the remote repository.
         LoreProcessRunner::run(
-            &[
+            [
                 "repository",
                 "create",
                 &url,
@@ -242,7 +242,7 @@ impl VcsBackend for LoreBackend {
 
         // Step 2: Clone it locally.
         LoreProcessRunner::run(
-            &[
+            [
                 "clone",
                 &url,
                 path.to_str().unwrap_or("."),
@@ -264,11 +264,11 @@ impl VcsBackend for LoreBackend {
     fn commit(&self, path: &Path, message: &str, author: &str) -> Result<String, NapError> {
         // Lore requires an explicit stage step.
         // Stage 1: Discover and stage all changes.
-        LoreProcessRunner::run(&["stage", "--scan", "--non-interactive"], Some(path))?;
+        LoreProcessRunner::run(["stage", "--scan", "--non-interactive"], Some(path))?;
 
         // Stage 2: Commit with identity.
         let stdout = LoreProcessRunner::run(
-            &[
+            [
                 "revision",
                 "commit",
                 "--message",
@@ -376,23 +376,23 @@ impl VcsBackend for LoreBackend {
 
     // ── branching ────────────────────────────────────────────────────
     fn create_branch(&self, path: &Path, name: &str) -> Result<(), NapError> {
-        LoreProcessRunner::run(&["branch", "create", name, "--non-interactive"], Some(path))?;
+        LoreProcessRunner::run(["branch", "create", name, "--non-interactive"], Some(path))?;
         Ok(())
     }
 
     fn switch_branch(&self, path: &Path, name: &str) -> Result<(), NapError> {
-        LoreProcessRunner::run(&["branch", "switch", name, "--non-interactive"], Some(path))?;
+        LoreProcessRunner::run(["branch", "switch", name, "--non-interactive"], Some(path))?;
         Ok(())
     }
 
     fn current_branch(&self, path: &Path) -> Result<String, NapError> {
-        let stdout = LoreProcessRunner::run(&["branch", "show", "--non-interactive"], Some(path))?;
+        let stdout = LoreProcessRunner::run(["branch", "show", "--non-interactive"], Some(path))?;
         Ok(stdout.trim().to_string())
     }
 
     fn list_branches(&self, path: &Path) -> Result<Vec<String>, NapError> {
         let stdout = LoreProcessRunner::run(
-            &["branch", "list", "--format", "json", "--non-interactive"],
+            ["branch", "list", "--format", "json", "--non-interactive"],
             Some(path),
         )?;
         if stdout.is_empty() || stdout == "[]" || stdout == "null" {
@@ -414,7 +414,7 @@ impl VcsBackend for LoreBackend {
         // We append the tag name to the current set of labels at HEAD.
         // For v0, we read the existing labels list, append, and write back.
         let current = LoreProcessRunner::run(
-            &[
+            [
                 "file",
                 "metadata",
                 "get",
@@ -437,7 +437,7 @@ impl VcsBackend for LoreBackend {
             .map_err(|e| NapError::VcsError(format!("failed to serialise label list: {}", e)))?;
 
         LoreProcessRunner::run(
-            &[
+            [
                 "file",
                 "metadata",
                 "set",
@@ -455,7 +455,7 @@ impl VcsBackend for LoreBackend {
 
     fn list_tags(&self, path: &Path) -> Result<Vec<String>, NapError> {
         let stdout = LoreProcessRunner::run(
-            &[
+            [
                 "file",
                 "metadata",
                 "get",
@@ -484,7 +484,7 @@ impl VcsBackend for LoreBackend {
     // ── head / revert ────────────────────────────────────────────────
     fn head_hash(&self, path: &Path) -> Result<String, NapError> {
         let stdout = LoreProcessRunner::run(
-            &[
+            [
                 "log",
                 "--limit",
                 "1",
@@ -519,7 +519,7 @@ impl VcsBackend for LoreBackend {
 
     fn revert(&self, path: &Path, commit_hash: &str) -> Result<String, NapError> {
         let stdout = LoreProcessRunner::run(
-            &["revision", "revert", commit_hash, "--non-interactive"],
+            ["revision", "revert", commit_hash, "--non-interactive"],
             Some(path),
         )?;
         // Lore outputs: "Created revert revision <signature>"
@@ -533,7 +533,7 @@ impl VcsBackend for LoreBackend {
     // ── remotes ──────────────────────────────────────────────────────
     fn add_remote(&self, path: &Path, name: &str, url: &str) -> Result<(), NapError> {
         LoreProcessRunner::run(
-            &[
+            [
                 "repository",
                 "add",
                 url,
@@ -548,7 +548,7 @@ impl VcsBackend for LoreBackend {
 
     fn remove_remote(&self, path: &Path, name: &str) -> Result<(), NapError> {
         LoreProcessRunner::run(
-            &["repository", "remove", "--alias", name, "--non-interactive"],
+            ["repository", "remove", "--alias", name, "--non-interactive"],
             Some(path),
         )?;
         Ok(())
@@ -556,7 +556,7 @@ impl VcsBackend for LoreBackend {
 
     fn list_remotes(&self, path: &Path) -> Result<Vec<(String, String)>, NapError> {
         let stdout = LoreProcessRunner::run(
-            &[
+            [
                 "repository",
                 "list",
                 "--format",

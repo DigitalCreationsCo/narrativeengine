@@ -209,7 +209,7 @@ impl RepoService {
             })?;
         }
 
-        std::fs::write(&full_path, content).map_err(|e| NapError::Io(e))?;
+        std::fs::write(&full_path, content).map_err(NapError::Io)?;
 
         Ok(())
     }
@@ -219,7 +219,7 @@ impl RepoService {
         self.permission_gate.check_read(path, principal)?;
 
         let full_path = self.workspace_root.join(path);
-        std::fs::read_to_string(&full_path).map_err(|e| NapError::Io(e))
+        std::fs::read_to_string(&full_path).map_err(NapError::Io)
     }
 
     // ── VCS operations ───────────────────────────────────────────────
